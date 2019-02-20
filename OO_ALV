@@ -1,0 +1,223 @@
+*************************************************************************************
+* ABAP OO ALV SNIPPET
+*************************************************************************************
+
+data: o_event_receiver type ref to lcl_event_receiver3.
+data: alv_container    type ref to cl_gui_custom_container,
+      grid             type ref to cl_gui_alv_grid,
+      gs_layout        type lvc_s_layo.
+data: t_catalog        type standard table of lvc_s_fcat.
+
+*=================================================================================
+class lcl_event_receiver3 definition.
+  public section.
+    methods:
+
+   handle_toolbar for event toolbar of cl_gui_alv_grid
+     importing e_object e_interactive,
+
+   handle_user_command for event user_command of cl_gui_alv_grid
+     importing e_ucomm,
+
+   handle_before_user_command for event before_user_command of cl_gui_alv_grid
+     importing e_ucomm,
+
+   handle_data_changed for event data_changed of cl_gui_alv_grid
+     importing er_data_changed e_onf4 e_onf4_before e_onf4_after,
+   handle_onf4 for event onf4 of cl_gui_alv_grid
+                importing e_fieldname e_fieldvalue es_row_no er_event_data,
+   handle_hot_spot for event hotspot_click of cl_gui_alv_grid
+     importing e_row_id e_column_id es_row_no,
+   handle_data_changed_fin for event data_changed_finished of cl_gui_alv_grid
+     importing e_modified et_good_cells,
+   handle_double_click for event double_click of cl_gui_alv_grid importing e_row e_column,
+   handle_close for event close of cl_gui_dialogbox_container
+     importing sender.
+    data: ls_toolbar  type stb_button.
+endclass.                    "lcl_event_receiver DEFINITION
+*=================================================================================
+
+class lcl_event_receiver3 implementation.
+  method handle_toolbar.
+
+*      clear ls_toolbar.
+*      move 'ADDR3' to ls_toolbar-function.
+*      move ICON_INSERT_ROW to ls_toolbar-icon.
+*      move 'Añadir línea'(111) to ls_toolbar-quickinfo.
+*      move ' ' to ls_toolbar-disabled.
+*      append ls_toolbar to e_object->mt_toolbar.
+
+*      clear ls_toolbar.
+*      move 'DELR3' to ls_toolbar-function.
+*      move ICON_DELETE_ROW to ls_toolbar-icon.
+*      move 'Borrar línea'(111) to ls_toolbar-quickinfo.
+*      move ' ' to ls_toolbar-disabled.
+*      append ls_toolbar to e_object->mt_toolbar.
+
+  endmethod.                    "handle_toolbar
+
+  method handle_user_command.
+
+    if  e_ucomm eq 'ADDR3'.
+*      perform select_all.
+      perform addr_line_3.
+    endif.
+
+    if  e_ucomm eq 'ADDL3'.
+      perform unselect_all_3.
+    endif.
+
+  endmethod.                    "handle_user_command
+
+  method handle_before_user_command.
+
+    if  e_ucomm eq 'SALL'.
+*      perform select_all.
+    endif.
+
+  endmethod.                    "handle_user_command
+
+  method handle_data_changed.
+*    perform data_changed_guides using er_data_changed.
+  endmethod.                    "handle_data_changed
+
+  method handle_data_changed_fin.
+    perform data_changed_fin_cont_esp using et_good_cells.
+  endmethod.                    "handle_data_changed
+
+
+  method handle_hot_spot.
+
+  endmethod.                    "handle_hot_spot
+
+
+  method handle_onf4.
+
+  endmethod.                    "handle_onf4
+
+method handle_double_click.
+   perform call_trx using e_row e_column.
+endmethod.
+
+endclass.            
+
+*=================================================================================
+
+  CREATE OBJECT alv_container
+    EXPORTING
+      container_name              = 'CNT_ALV'
+      lifetime                    = alv_container->lifetime_imode
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5.
+  IF sy-subrc NE 0.
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = gv_repid
+        txt2  = sy-subrc
+        txt1  = TEXT-e01.
+  ENDIF.
+  
+*  Crear instancia de ALV control
+  CREATE OBJECT grid3
+    EXPORTING
+      i_parent          = alv_container
+      i_appl_events     = 'X'
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4.
+	  
+
+FORM crea_layout1 CHANGING ps_layout TYPE lvc_s_layo.
+
+* Fijar titulo a ALV
+  ps_layout-smalltitle = ' '.
+  ps_layout-cwidth_opt = ' '.
+  ps_layout-no_headers = ' '.
+  ps_layout-no_rowmark = ' '.
+  ps_layout-no_toolbar = ' '.
+  ps_layout-sel_mode = 'A'.
+  ps_layout-zebra    = true.
+  ps_layout-stylefname = 'CELL'.
+  ps_layout-info_fname = 'LINEC'.
+  ps_layout-cwidth_opt = true.
+  ps_layout-grid_title = 'ASIGNACIÓN DE GUIAS Y CONTENEDORES A PEDIDOS'.
+  ps_layout-smalltitle = false.
+
+ENDFORM.
+
+FORM exclude_toolbar .
+  ls_exclude = grid1->mc_fc_loc_insert_row.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_loc_delete_row.
+  APPEND ls_exclude TO lt_exclude.
+
+
+  ls_exclude = grid1->mc_fc_sort_asc.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_select_all.
+  APPEND ls_exclude TO lt_exclude.
+
+
+  ls_exclude = grid1->mc_fc_sort_dsc.
+  APPEND ls_exclude TO lt_exclude.
+
+  ls_exclude = grid1->mc_fc_loc_append_row.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_filter.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_loc_cut.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_refresh.
+  APPEND ls_exclude TO lt_exclude.
+
+  ls_exclude = grid1->mc_fc_loc_move_row    .
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_loc_paste_new_row.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_loc_undo.
+  APPEND ls_exclude TO lt_exclude.
+  ls_exclude = grid1->mc_fc_loc_copy_row.
+  APPEND ls_exclude TO lt_exclude.
+ 
+ENDFORM.
+
+FORM display_alv .
+
+  CALL METHOD grid3->set_table_for_first_display
+    EXPORTING
+      is_layout            = gs_layout
+      it_toolbar_excluding = lt_exclude
+    CHANGING
+      it_outtab            = it_cont_esp[]     
+      it_fieldcatalog      = t_catalog.
+
+  CALL METHOD grid3->register_edit_event
+    EXPORTING
+      i_event_id = cl_gui_alv_grid=>mc_evt_enter.
+
+  CALL METHOD grid3->register_edit_event
+    EXPORTING
+      i_event_id = cl_gui_alv_grid=>mc_evt_modified.
+
+  CREATE OBJECT o_event_receiver.
+  SET HANDLER o_event_receiver->handle_toolbar FOR grid3.
+  SET HANDLER o_event_receiver->handle_user_command FOR grid3.
+  SET HANDLER o_event_receiver->handle_onf4 FOR grid3.
+  SET HANDLER o_event_receiver->handle_data_changed FOR grid3.
+  SET HANDLER o_event_receiver->handle_data_changed_fin FOR grid3.
+  SET HANDLER o_event_receiver->handle_hot_spot FOR grid3.
+  SET HANDLER o_event_receiver->handle_double_click FOR grid3.
+
+  CALL METHOD grid3->set_toolbar_interactive.
+
+  CALL METHOD cl_gui_control=>set_focus
+    EXPORTING
+      control = grid_alv.
+ENDFORM.                    " DISPLAY_ALV3
+
